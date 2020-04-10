@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -21,10 +22,13 @@ public class GameManager : MonoBehaviour
 
     public GameObject panelWalls;       //壁全体
 
-    public GameObject buttonHammer;     //ボタントンカチ
+    public GameObject buttonHammer;     //ボタン:トンカチ
+    public GameObject buttonKey;        //ボタン：鍵
 
     public GameObject imageHammerIcon;  //アイコン：トンカチ
+    public GameObject imageKeyIcon;     //アイコン：鍵
 
+    public GameObject buttonPig;        //ボタン：豚の貯金箱
     public GameObject buttonMessage;    //ボタン：メッセージ
     public GameObject buttonMessageText;    //メッセージテキスト
 
@@ -32,9 +36,11 @@ public class GameManager : MonoBehaviour
     public Sprite[] buttonPicture = new Sprite[4];  //ボタンの絵
 
     public Sprite hammerPicture;                    //トンカチの絵
+     public Sprite keyPicture;                       //カギの絵
 
     private int wallNo;                 //現在の向いている方向
     private bool doesHaveHammer;        //トンカチを持っているか？
+    private bool doesHaveKey;           //鍵を持っているか？
     private int[] buttonColor = new int[3]; //金庫のボタン
 
 
@@ -43,10 +49,13 @@ public class GameManager : MonoBehaviour
     {
         wallNo = WALL_FRONT;            //スタート時点では「前」を向く
         doesHaveHammer = false;  //ハンマー持ってない
+        doesHaveKey = false;    //鍵持ってない
 
         buttonColor [0] = COLOR_GREEN;  //ボタン1は緑
         buttonColor [1] = COLOR_RED;    //ボタン2は赤
         buttonColor [2] = COLOR_BLUE;   //ボタン3は青
+
+        DisplayMessage("ここはなんだろう");
     }
 
     // Update is called once per frame
@@ -55,6 +64,15 @@ public class GameManager : MonoBehaviour
         
     }
 
+    //ボックスをタップ
+    public void PushButtonBox (){
+        if (doesHaveKey == false){
+            //鍵を持っていない
+            DisplayMessage("鍵がかかっている");
+        }else{
+            SceneManager.LoadScene("ClearScene");
+        }
+    }
     //ボタン1をタップ
     public void PushBottonLamp1(){
         ChangeButtonColor (0);
@@ -79,13 +97,57 @@ public class GameManager : MonoBehaviour
         }
 
         //画像変更
-        buttonLamp[buttonNo].GetComponent<Image>().sprite =
+        buttonLamp [buttonNo].GetComponent<Image>().sprite =
             buttonPicture [buttonColor [buttonNo]];
+
+        //色チェック
+        if(
+        (buttonColor[0] == COLOR_BLUE) &&
+        (buttonColor[1] == COLOR_WHITE)&&
+        (buttonColor[2] == COLOR_RED)){
+            //まだトンカチ持ってない
+            if(doesHaveHammer == false){
+                DisplayMessage("金庫の中にトンカチが入っていた");
+                buttonHammer.SetActive (true);  //トンカチを実行
+                imageHammerIcon.GetComponent<Image>().sprite = hammerPicture;
+
+                doesHaveHammer = true;
+            }
+        }
     }
 
     //メモをタップ
     public void PushButtonMemo(){
         DisplayMessage ("エッフェル塔と書いてある");
+    }
+
+
+    //貯金箱をタップ
+    public void PushButtonPig(){
+        //トンカチ持ってるか？
+        if(doesHaveHammer == false){
+            DisplayMessage("素手では割れない");
+        }else{
+            DisplayMessage("貯金箱が割れて中から鍵が出てきた");
+
+            buttonPig.SetActive(false);
+            buttonKey.SetActive(true);
+            imageKeyIcon.GetComponent<Image>().sprite = keyPicture;
+
+            doesHaveKey = true;
+        }
+    }
+
+    //トンカチタップ
+    public void PushButtonHammer(){
+        buttonHammer.SetActive(false);
+        buttonMessage.SetActive (false);    //メッセージを消す
+    }
+
+      //    鍵タップ
+    public void PushButtonKey(){
+        buttonKey.SetActive(false);
+        buttonMessage.SetActive (false);    //メッセージを消す
     }
 
     //メッセージタップ
@@ -101,6 +163,7 @@ public class GameManager : MonoBehaviour
             wallNo = WALL_FRONT;
         }
         DisplayWall ();//壁表示更新
+        ClearButtons ();//いらないものを消す
     }
 
     //左ボタンを押した
@@ -111,8 +174,15 @@ public class GameManager : MonoBehaviour
             wallNo = WALL_LEFT;
         }
         DisplayWall ();//壁表示更新
+        ClearButtons ();//いらないものを消す
     }
 
+    //各種表示のクリア
+    void ClearButtons(){
+        buttonHammer.SetActive(false);
+        buttonKey.SetActive(false);
+        buttonMessage.SetActive(false);
+    }
     //メッセージを表示
     void DisplayMessage(string mes){
         buttonMessage.SetActive (true);
